@@ -1,72 +1,272 @@
-import React, { useState } from "react";
-import "./login.css"; // import CSS
+import React, { useState, useEffect } from "react";
+import "./login.css";
 
-function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const LoginPage = ({ onPageChange }) => {
+  const isMobile = () => window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+  const [panelsSwitched, setPanelsSwitched] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return isMobile() ? true : false; // default to Sign in on mobile
+  });
+  const [showRegisterForm, setShowRegisterForm] = useState(true);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    rememberMe: false,
+  });
+
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (isMobile()) {
+        // Force login view on mobile
+        setPanelsSwitched(true);
+        setShowRegisterForm(false);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleRegisterClick = () => {
+    setPanelsSwitched(!panelsSwitched);
+    if (!panelsSwitched) {
+      setShowRegisterForm(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Email:", email);
-    console.log("Password:", password);
-    alert("Login Successful (dummy)");
+    if (panelsSwitched) {
+      // Register form submission
+      if (formData.password !== formData.confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+      console.log("Registration data:", formData);
+    } else {
+      // Login form submission
+      console.log("Login form submitted");
+    }
   };
 
   return (
-    <div className="login-container">
-      <nav className="navbar">
-        <h2 className="logo">FluidOrbit</h2>
-        <ul className="nav-links">
-          <li>Home</li>
-          <li>Explore</li>
-          <li>About</li>
-          <li>Contact</li>
-        </ul>
-        <button className="nav-login">Login</button>
-      </nav>
+    <div className={`container ${panelsSwitched ? 'panels-switched' : ''}`}>
+      {/* Left Panel */}
+      <div className="left-panel">
+         <div className="logo">Fluid Orbit</div>
+        {panelsSwitched && showRegisterForm ? (
+          // Register form on left when switched and form is visible
+          <div className="register-form-left">
+            <h2>Create an account</h2>
+            <p className="desc">
+              Join thousands of users who trust us with their productivity.
+            </p>
+            
+            <form onSubmit={handleSubmit}>
+              <label htmlFor="register-email">Your email</label>
+              <input 
+                type="email" 
+                id="register-email" 
+                name="email"
+                placeholder="example@mail.com" 
+                value={formData.email}
+                onChange={handleChange}
+              />
 
-      <div className="login-box">
-        <h2>Nice to see you Here</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Email or phone number"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+              <label htmlFor="register-password">Create password</label>
+              <input 
+                type="password" 
+                id="register-password" 
+                name="password"
+                placeholder="Password" 
+                value={formData.password}
+                onChange={handleChange}
+              />
 
-          <div className="options">
-            <label>
-              <input type="checkbox" /> Remember me
-            </label>
-            <a href="/">Forgot password?</a>
+              <label htmlFor="register-confirm">Confirm the password</label>
+              <input 
+                type="password" 
+                id="register-confirm" 
+                name="confirmPassword"
+                placeholder="Confirm password" 
+                value={formData.confirmPassword}
+                onChange={handleChange}
+              />
+
+              <div className="remember-me">
+                <input 
+                  type="checkbox" 
+                  id="register-remember" 
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleChange}
+                />
+                <label htmlFor="register-remember">Remember me</label>
+              </div>
+
+              <button type="submit" className="btn">
+                Create Account
+              </button>
+            </form>
+
+            <div className="divider">
+              <span>or continue with</span>
+            </div>
+
+            <button className="google">Sign-up with Google</button>
           </div>
+        ) : (
+          // Default content on left (when not switched or register form is hidden)
+          <div className="overlay">
+            <h1>
+             <h2>Still early, Still Building</h2>     
+             <br/> 
+             Not a Marketplace, Not a Store   <br/>
+             The shopping Agent engine: where Trust, Quality and Convenience Matters.
+            </h1>
+          </div>
+        )}
+      </div>
 
-          <button type="submit" className="btn-login">Login</button>
+      {/* Right Panel */}
+      <div className="right-panel">
+        <div className="top-nav">
+          <div className="nav-title">{panelsSwitched ? '' : ''}</div>
+        </div>
+        {panelsSwitched ? (
+          // Login form on right when switched
+          <div>
+            <h2>Welcome back!</h2>
+            <p className="desc">
+              Shop Anything...
+            </p>
 
-          <button type="button" className="btn-google">
-            <img
-              src="https://www.svgrepo.com/show/355037/google.svg"
-              alt="google"
-            />
-            Or sign in with Google
-          </button>
-        </form>
+            <form onSubmit={handleSubmit}>
+              <label htmlFor="login-email">Your email</label>
+              <input 
+                type="email" 
+                id="login-email" 
+                name="email"
+                placeholder="example@mail.com" 
+                value={formData.email}
+                onChange={handleChange}
+              />
 
-        <p className="signup-text">
-          Don’t have an account? <a href="/">Sign up now</a>
-        </p>
+              <label htmlFor="login-password">Password</label>
+              <input 
+                type="password" 
+                id="login-password" 
+                name="password"
+                placeholder="Password" 
+                value={formData.password}
+                onChange={handleChange}
+              />
+
+              <div className="remember-me">
+                <input 
+                  type="checkbox" 
+                  id="login-remember" 
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleChange}
+                />
+                <label htmlFor="login-remember">Remember me</label>
+              </div>
+
+              <button type="submit" className="btn">
+                Sign in
+              </button>
+            </form>
+
+            <div className="divider">
+              <span>or continue with</span>
+            </div>
+
+            <button className="google">Sign-in with Google</button>
+
+            <p className="footer">
+              Don't have an account? <a href="#" onClick={handleRegisterClick}>Create account</a>
+            </p>
+          </div>
+        ) : (
+          // Default register form on right
+          <div>
+            <h2>Create an account</h2>
+            <p className="desc">
+              Join and Shop Anything...
+            </p>
+
+            <form onSubmit={handleSubmit}>
+              <label htmlFor="email">Your email</label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email"
+                placeholder="example@mail.com" 
+                value={formData.email}
+                onChange={handleChange}
+              />
+
+              <label htmlFor="password">Create password</label>
+              <input 
+                type="password" 
+                id="password" 
+                name="password"
+                placeholder="Password" 
+                value={formData.password}
+                onChange={handleChange}
+              />
+
+              <label htmlFor="confirmPassword">Confirm the password</label>
+              <input 
+                type="password" 
+                id="confirmPassword" 
+                name="confirmPassword"
+                placeholder="Confirm password" 
+                value={formData.confirmPassword}
+                onChange={handleChange}
+              />
+
+              <div className="remember-me">
+                <input 
+                  type="checkbox" 
+                  id="remember" 
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleChange}
+                />
+                <label htmlFor="remember">Remember me</label>
+              </div>
+
+              <button type="submit" className="btn">
+                Create Account
+              </button>
+            </form>
+
+            <div className="divider">
+              <span>or continue with</span>
+            </div>
+
+            <button className="google">Sign-in with Google</button>
+
+            <p className="footer">
+              Already have an account? <a href="#" onClick={handleRegisterClick}>Sign in</a>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
 
-export default Login;
+export default LoginPage;
